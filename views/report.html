@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>Evaluator: Report: <%= version ? version.name : '' %></title>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
+<link rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css">
+<script src="/semantic/dist/semantic.min.js"></script>
+<script src="/javascripts/evaluator.js"></script>
+<link rel="stylesheet" type="text/css" href="/stylesheets/evaluator.css">
+<script>
+	var version = "<%= version ? version.name : '' %>";
+</script>
+
+</head>
+<body ng-app="evaluator">
+
+
+
+<div id="all" class="main ui container">
+<h1><%= version ? version.name : '' %></h1>
+<div><%= version ? version.notes : '' %></div>
+<div class="tiny"><%= version ? version.url : '' %></div>
+<div class="error message"><%= message ? message : '' %></div>
+<div class="ui grid">
+<div class="eight wide column">
+ <report/>
+</div>
+<div class="eight wide column">	
+ <div class="ui right sticky fixed top">
+  <results/>
+ </div>
+</div>
+</div>
+</div>
+
+</body>

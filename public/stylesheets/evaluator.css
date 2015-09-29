@@ -1,0 +1,44 @@
+
+.blue { background-color: SkyBlue }
+.red { background-color: Red }
+.green { background-color: Green }
+
+body { padding:10px;font-size:11px; }
+search { margin-bottom:40px;}
+query { display: block; margin:10px; }
+query input { font-size:24px; width:400px; padding:10px;}
+
+terms { margin-left:20px; display:inline-block; font-size:14px; line-height:14px; width:250px; padding:25px;  white-space: nowrap; overflow: hidden;}
+.term { padding:3px;display:block; color:skyblue; }
+terms .seen { color:pink; }
+terms :first-child { color:blue; }
+
+results,judgements { text-align:center; width:100%; display:block; cursor:pointer }
+first { display:inline-block; }
+
+.results { display:block; width:400px; padding:10px; color: silver;  }
+.result { position:relative;background-color:#eeeeee; margin:5px 0px; padding:10px; color:Black;}
+.result .offerId { font-size:10px; display:none; }
+.result .offerTitle { font-size: 18px; font-weight: bold; display: block }
+
+.button { cursor:pointer; font-size:36px; line-height:36px; font-weight:bold; padding:10px; display:inline-block}
+.button:active { color:white }
+.button.active { color:white }
+
+actions { width:100%;height:100%;position:absolute; top:0;left:0 }
+action { position:absolute;top:8px;right:0;font-size:24px; color:white;cursor:pointer; }
+action .selected { color:orange;}
+action:hover { color:DarkGray }
+
+
+finished { max-width:500px; font-weight:normal; font-size:14px; display:block; }
+finished button { padding:3px; margin:10px 0; }
+finished i { color:silver }
+.GOOD { color:green; }
+.BAD { color:red; }
+
+thanks { font-weight:bold;margin-top:100px;text-align:center; background-color:white;width:100%; height:100%; position:absolute; top:0; left: 0; display:none;font-size:48px;color:green}
+thanks div { margin: 10% 40%;font-size:200px; }
+thanks i {  }
+
+.tiny { font-size:10px; color:silver; }
