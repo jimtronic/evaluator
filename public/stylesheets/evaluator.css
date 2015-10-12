@@ -2,21 +2,19 @@
 .blue { background-color: SkyBlue }
 .red { background-color: Red }
 .green { background-color: Green }
+.gray { background-color: silver }
 
 body { padding:10px;font-size:11px; }
-search { margin-bottom:40px;}
+search { margin-bottom:40px; display:none;}
 query { display: block; margin:10px; }
-query input { font-size:24px; width:400px; padding:10px;}
+query input { font-size:24px; width:100%; padding:10px;}
 
 terms { margin-left:20px; display:inline-block; font-size:14px; line-height:14px; width:250px; padding:25px;  white-space: nowrap; overflow: hidden;}
 .term { padding:3px;display:block; color:skyblue; }
-terms .seen { color:pink; }
-terms :first-child { color:blue; }
-
-results,judgements { text-align:center; width:100%; display:block; cursor:pointer }
+judgements { padding:10px;text-align:center; display:inline-block; cursor:pointer; width:100% }
+results { text-align:center; display:inline-block; cursor:pointer; width:330px; vertical-align:top; min-height:1000px }
 first { display:inline-block; }
 
-.results { display:block; width:400px; padding:10px; color: silver;  }
 .result { position:relative;background-color:#eeeeee; margin:5px 0px; padding:10px; color:Black;}
 .result .offerId { font-size:10px; display:none; }
 .result .offerTitle { font-size: 18px; font-weight: bold; display: block }
@@ -42,3 +40,5 @@ thanks div { margin: 10% 40%;font-size:200px; }
 thanks i {  }
 
 .tiny { font-size:10px; color:silver; }
+
+.ui.rail { width:180px!Important;overflow:visible!Important }

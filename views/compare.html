@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>Evaluate: <%= version %></title>
+<title>Compare: <%= versionOne %> vs <%= versionTwo %></title>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
 <link rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css">
@@ -9,23 +9,25 @@
 <script src="/javascripts/evaluator.js"></script>
 <link rel="stylesheet" type="text/css" href="/stylesheets/evaluator.css">
 <script>
-	var version = "<%= version %>";
+	var version = "<%= versionOne %>_<%= versionTwo %>";
 </script>
 </head>
 
-<body ng-app="evaluator"  ng-init="choices = ['BAD','GOOD']">
+<body ng-app="evaluator" ng-init="choices=['<%= versionOne %>','<%= versionTwo %>']">
 <div id="all" class="ui text container">
 <div class="ui container">
 <div class="ui container">
+
   <div class="ui left internal rail">      
-     <finished data-choice="BAD" />
+     <finished data-choice="<%= versionOne %>" />
   </div>
   <div class="ui right internal rail">
-     <finished data-choice="GOOD"/>
+     <finished data-choice="<%= versionTwo %>"/>
   </div>
   <p><judgements/></p>
   <p><query/></p>
-  <p><results data-version="<%= version %>"/></p>
+  <results data-version="<%= versionOne %>"></results>
+  <results data-version="<%= versionTwo %>"></results>
 
 </div>
 </div>

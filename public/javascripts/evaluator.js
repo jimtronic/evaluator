@@ -2,67 +2,85 @@ evaluator = angular.module('evaluator', []);
 
 evaluator.filter('unsafe', function($sce) { return $sce.trustAsHtml; });
 
-evaluator.directive('results', function() {
-	return {
-		transclude: true,
-		template: '<query/><first/>'
-	}
-});	
+evaluator.directive('query', function(queryService,termsService) {
+	return {		
+		template: '<input ng-model="term.term" ng-change="changeTerm();" placeholder="enter term"/>',
+		link: function(scope,elem,attrs,ctrl) {
 
-evaluator.directive('query', function(queryService) {
-	return {
-		template: '<input ng-model="term.term" placeholder="enter term"/>',
-		link: function(scope,elem,attrs) {
-				scope.getResults = function () {
-					if (typeof scope.term == "undefined" || scope.term == "") {
-						scope.firstResults = null;
-						return;
-					}
-				
-					var first = queryService.getResults(scope.term.term, version);
-					first.then(
-  						function(payload) {
-    						scope.firstResults = payload.data;    					
-  						});  					
-  				};
+  				scope.changeTerm = function () {
+  					if (scope.term.term == "" || typeof scope.term.term == 'undefined') {
+  						return;
+  					}
+  					var newTerm = scope.term.term;
+  					scope.term = new termsService.Term(scope.term.term);  				
+  				}
   			
-				scope.$watch('term.term', function() {				
-					scope.getResults();
-				});
-				
-				scope.getResults();
 			}		
 		}
 });
 
-evaluator.directive('judgements', function() {
+evaluator.directive('judgements', function(judgementService) {
 	return {
 		transclude: true,
-		template: '<div id="BAD" ng-click="judge($event);" class="button red" data="BAD"><i class="icon arrow left"/>BAD</div> <div ng-click="judge($event);" id="GOOD" class="button green" data="GOOD">GOOD<i class="icon arrow right"/></div> ',
+		template: '<div ng-click="judge($event);" class="button red" data-choice="{{ choices[0] }}"><i class="icon arrow left"/>{{ choices[0] }}</div>\
+		<div ng-click="skip();" class="button gray" data-choice="SKIP"><i class="icon arrow up"/>SKIP</div>\
+		<div ng-click="judge($event);" class="button green" data-choice="{{ choices[1] }}">{{ choices[1] }}<i class="icon arrow right"/></div> ',
 		link: function(scope,elem,attrs,$timeout) {
 			scope.judge = function($event) {
+				console.log("CLICK");
+				console.log($event.currentTarget.attributes);
 			    angular.element($event.currentTarget).addClass("active");
 			    setTimeout(function() { 
 				    angular.element($event.currentTarget).removeClass("active");
 				}, 200);
-				scope.term.judgement = $event.currentTarget.attributes.data.value;
+				scope.term.judgement = $event.currentTarget.attributes["data-choice"].value;
+				var s = judgementService.save(scope.term);
+				s.then(function(payload) { console.log(payload) });
 				scope.nextTerm();
-			}			
+			}	
+			scope.skip = function() {
+				console.log("SKIP");	
+				scope.nextTerm();
+			}
+
+
 		}		
 	}
 });
 
-evaluator.directive('first',function() {
+evaluator.directive('results',function(queryService) {
 	return {
 		restrict: 'E',
-				
-		template: '<div class="results">NUM FOUND: {{ firstResults.response.numFound }} {{ firstResults.responseHeader }}\
-					<div ng-repeat="doc in firstResults.response.docs" class="result"><span class="offerId">{{ doc.id }}</span><span class="offerTitle" ng-bind-html="doc.offerTitle | unsafe"></span><action data-id="{{ doc.id }}" data-title="{{ doc.offerTitle }}"></action></div>\
+		transclude: true,	
+		scope: true,
+		template: '<div class="results">NUM FOUND: {{ results.response.numFound }} {{ results.responseHeader }}\
+					<div ng-repeat="doc in results.response.docs" class="result"><span class="offerId">{{ doc.id }}</span><span class="offerTitle" ng-bind-html="doc.offerTitle | unsafe"></span><action data-id="{{ doc.id }}" data-title="{{ doc.offerTitle }}"></action></div>\
 					</div>',
 		link: function(scope, elem, attrs) {
+			
 			scope.toggle = function(obj,$event) {
 				$event.target.previousElementSibling.show();
 			}
+			scope.$watch('term.term', function() {				
+					scope.setResults();
+			});
+				
+			scope.setResults = function() {
+					console.log("SETTING SET RESULTS FOR " + attrs.version);	
+					var version = attrs.version;
+					if (typeof scope.term == "undefined") {
+						return
+					}
+					var query = queryService.getResults(scope.term.term, version);
+					query.then(
+							function(payload) {
+								console.log("DATA RETRIEVED FOR VERSION " + version);
+								scope.results = payload.data;
+							});
+			}
+			
+			//scope.setResults();
+
 		}		
 	}
 });
@@ -94,7 +112,7 @@ evaluator.directive('action', function() {
 	}
 });
 
-evaluator.directive('terms', function(termsService) {
+evaluator.directive('terms', function(termsService, judgementService) {
 	return {
 		template: '<div class="term" ng-repeat="t in terms track by $index" ng-bind-html="t | unsafe"></div>',
 		link: function(scope,elem,attrs) {
@@ -107,7 +125,7 @@ evaluator.directive('terms', function(termsService) {
     					scope.term = new termsService.Term(scope.terms.shift());
   					});
   					
-			scope.nextTerm = function() {
+			scope.nextTerm = function() {				
 				scope.judgements.unshift(scope.term);
 				if (scope.terms.length > 0) {
 					scope.term = scope.term = new termsService.Term(scope.terms.shift());
@@ -120,35 +138,28 @@ evaluator.directive('terms', function(termsService) {
 	}
 });
 
-evaluator.directive('finished', function(reportService) {
+evaluator.directive('finished', function() {
 	return {
-		template: '<button ng-click="submitReport();">submit results</button><div ng-repeat="term in judgements track by $index"><b ng-class="term.judgement" ng-bind-html="term.term | unsafe"></b> <i ng-repeat="flag in term.flags track by $index">{{ flag.id }} <span ng-bind-html="flag.title | unsafe"></span><span ng-show="!$last">, </span></i></div>',
+		template: '<h2>{{ choice }}</h2><div ng-repeat="term in judgements | filter: { judgement:choice } track by $index "><b ng-class="term.judgement" ng-bind-html="term.term | unsafe"></b> <i ng-repeat="flag in term.flags track by $index">{{ flag.id }} <span ng-bind-html="flag.title | unsafe"></span><span ng-show="!$last">, </span></i></div>',
+		scope: true,
 		link: function(scope,elem,attrs) {
-			scope.submitReport = function() {				
-				var promise = reportService.submitReport(scope.judgements);
-				promise.then(
-  					function(payload) {
-    					angular.element("#all").hide();
-    					angular.element("thanks").show();					
-  					}
-  				);				
-			}
+			scope.choice = attrs.choice;
 		}
 
 	}
 });
 
-evaluator.directive('report', function(reportService,$filter) {
+evaluator.directive('report', function(judgementService,$filter) {
 	return {
-		template: '<table class="selectable ui celled table collapsing"><thead><tr><th>Term</th><th>Bad</th><th>Good</th><th>Flags</th></tr></thead>\
+		template: '<table class="selectable ui celled table collapsing"><thead><tr><th>Term</th><th>First</th><th>Second</th><th>Flags</th></tr></thead>\
 					<tbody>\
 					<tr ng-click="query($event)" term="{{ judgement.term }}" ng-repeat="judgement in judgements track by $index">\
-					<td  class="collapsing" ng-bind-html="judgement.term | unsafe"></td><td class="collapsing">{{ judgement.bad_votes }}</td><td class="collapsing">{{ judgement.good_votes }}</td><td class="collapsing"><span><p ng-repeat="flag in judgement.flags track by $index" ng-bind-html="flag.title | unsafe">({{ flag.id }})</p></span></td>\
+					<td  class="collapsing" ng-bind-html="judgement.term | unsafe"></td><td class="collapsing">{{ judgement.first_votes }}</td><td class="collapsing">{{ judgement.second_votes }}</td><td class="collapsing"><span><p ng-repeat="flag in judgement.flags track by $index" ng-bind-html="flag.title | unsafe">({{ flag.id }})</p></span></td>\
 					</tr>\
 					</tbody>\
 					</table>',
 		link: function(scope,elem,attrs) {
-			scope.terms = []
+			scope.terms = []			
 		    scope.query = function($event) {
 		    	var term = $event.currentTarget.attributes.term.value;
 		    	var found = $filter('filter')(scope.judgements, {term: term}, true);
@@ -156,7 +167,7 @@ evaluator.directive('report', function(reportService,$filter) {
 					scope.term = found[0];
          		}		    	
 		    };
-		    var promise = reportService.getReport(version);
+		    var promise = judgementService.getReport(version);
 		    promise.then(
 		    	function(payload) {
 		    		scope.judgements = payload.data;
@@ -250,12 +261,20 @@ evaluator.directive('thanks', function() {
 });
 
 var handler = function(e){
-    if(e.keyCode === 39) {
-      angular.element("#GOOD").trigger('click');
-    }   
+	var scope = angular.element("body").scope();
     if(e.keyCode === 37) {
-      angular.element("#BAD").trigger('click');
+      angular.element('[data-choice="'+scope.choices[0]+'"]').trigger('click');
+    }   
+    if(e.keyCode === 38) {
+      angular.element('[data-choice="SKIP"]').trigger('click');
     } 
+    if(e.keyCode === 39) {
+      angular.element('[data-choice="'+scope.choices[1]+'"]').trigger('click');
+    } 
+    if(e.keyCode === 40) {
+      angular.element('[data-choice="BACK"]').trigger('click');
+    } 
+
 };
 
 var $doc = angular.element(document);
@@ -279,20 +298,20 @@ evaluator.service('termsService', function($http) {
    }
 });
 
-evaluator.service('reportService', function($http) {
+evaluator.service('judgementService', function($http) {
    return {
-        submitReport: function(report) {    
+        save: function(judgement) {    
         	
-        	 for (j in report) {
-        	 	problems = report[j].flags
-        	 	report[j].flags = []
-        	 	for (i in problems) {
-        	 		report[j].flags.push(problems[i])
-        	 	}
-        	 }
+        	console.log("SAVING");
+			problems = judgement.flags
+			judgement.flags = []
+			for (i in problems) {
+				judgement.flags.push(problems[i])
+			 }
                  
-             return $http.post('/judgements/save',{header : {'Content-Type' : 'application/json; charset=UTF-8'},judgements:report})
-                       .then(function(result) {                            
+             return $http.post('/judgements/save',{header : {'Content-Type' : 'application/json; charset=UTF-8'},judgements:[judgement]})
+                       .then(function(result) {  
+                       		console.log(result);                          
                             return result;
                         });
         },
@@ -332,7 +351,7 @@ evaluator.service('queryService', function($http) {
    return {
         getResults: function(term, version) { 
                  
-             return $http.get('/query/' + version + '/' + term,{header : {'Content-Type' : 'application/json; charset=UTF-8'}})
+             return $http.get('/query/' + version + '/' + escape(term),{header : {'Content-Type' : 'application/json; charset=UTF-8'}})
                        .then(function(result) {                            
                             return result;
                         });

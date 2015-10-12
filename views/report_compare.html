@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Evaluator: Report: <%= version ? version.name : '' %></title>
+<title>Evaluator: Report: <%= versionOne %> vs <%= versionTwo %> %></title>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
 <link rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css">
@@ -8,9 +8,9 @@
 <script src="/javascripts/evaluator.js"></script>
 <link rel="stylesheet" type="text/css" href="/stylesheets/evaluator.css">
 <script>
-	var version = "<%= version.name %>";
-	
-
+	var version = "<%= versionOne %>_<%= versionTwo %>";
+	var versionOne = "<%= versionOne %>";
+	var versionTwo = "<%= versionTwo %>";
 </script>
 
 </head>
@@ -19,10 +19,6 @@
 
 
 <div id="all" class="main ui container">
-<h1><%= version ? version.name : '' %></h1>
-<div><%= version ? version.notes : '' %></div>
-<div class="tiny"><%= version ? version.url : '' %></div>
-<div class="error message"><%= message ? message : '' %></div>
 <div class="ui grid">
 <div class="six wide column">
  <report/>
@@ -31,8 +27,8 @@
  <div class="ui right sticky fixed top">
    <p><judgements/></p>
   <p><query/></p>
-  <results version="<%= version.name %>"></results>
-  
+  <results data-version="<%= versionOne %>"></results>
+  <results data-version="<%= versionTwo %>"></results>
 
  </div>
 </div>

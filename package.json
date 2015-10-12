@@ -1,6 +1,6 @@
 {
-  "name": "cartcompare",
-  "version": "0.0.0",
+  "name": "evaluator",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"

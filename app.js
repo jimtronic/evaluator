@@ -15,6 +15,8 @@ var JudgementSchema = new mongoose.Schema({
 									term: String, 
 									good_votes: Number,
 									bad_votes: Number,
+									first_votes: Number,
+									second_votes: Number,
 									flags: [] 
 								});
 JudgementSchema.index({term:1,version:1},{unique:true});								
@@ -45,20 +47,36 @@ app.use(express.static(path.join(__dirname, 'semantic')));
 
 // routes
 app.get('/evaluate/:version', function(req, res, next) {
-  res.render('evaluate.html', { title: 'Express', foo: 'bar', version: req.params.version });
+  res.render('evaluate.html', { version: req.params.version });
+});
+
+app.get('/compare/:versionOne/:versionTwo', function(req, res) {
+  res.header('Cache-Control','no-cache');
+  res.render('compare.html', { versionOne: req.params.versionOne, versionTwo: req.params.versionTwo });
 });
 
 app.post('/judgements/save', function(req, res) {
 	for (idx in req.body.judgements) {
 		var j = req.body.judgements[idx];
-		console.log(j);
-		var good_vote = (j.judgement == "GOOD") ? 1 : 0;
-		var bad_vote = (j.judgement == "BAD") ? 1 : 0;
+				
+		var first_vote =0;
+		var second_vote = 0;
+		var choices = ['BAD','GOOD']
+		
+		if (j.version.indexOf('_') != -1) {
+			choices = j.version.split('_');		
+		} 
+		
+		first_vote = (j.judgement == choices[0]) ? 1 : 0;
+		second_vote = (j.judgement == choices[1]) ? 1 : 0;
+
+		
 		var judgement = { 
 									version: j.version, 									 
 									term: j.term, 									
-									$inc: { good_votes: good_vote, bad_votes: bad_vote },
-									$addToSet: { flags: { $each:j.flags } }									
+									$inc: { first_votes: first_vote, second_votes: second_vote },
+									$addToSet: { flags: { $each:j.flags }}
+																	
 						};
 		Judgement.findOneAndUpdate( { term: j.term, version: j.version}, judgement, { upsert:true, new:true}, 
 			function (err,doc) {
@@ -141,6 +159,12 @@ app.get('/judgements/:version', function(req, res) {
     				});
 });		
 
+app.get('/report/:versionOne/:versionTwo', function(req, res, next) {
+	res.render("report_compare.html", { versionOne: req.params.versionOne ,
+										versionTwo: req.params.versionTwo }
+										 );														
+});
+
 app.get('/report/:version', function(req, res, next) {
 	Version.findOne({name: req.params.version }).exec( 
 					function (err, result) {
@@ -150,7 +174,7 @@ app.get('/report/:version', function(req, res, next) {
 							console.log(result);
 							if (result == null) {
 								message = "version does not exist";
-								res.render("report.html", { version: { 'name':'', 'notes':'', 'url':'' }, message: message });														
+								res.render("report.html", { version: { 'name':req.params.version, 'notes':'', 'url':'' }, message: message });														
 							} else {
 								res.render("report.html", { version: result, message: '' });												
 							}							
@@ -181,8 +205,10 @@ app.get('/query/:version/:term', function(req, res) {
 							var options = {
 								host: parsed.hostname,
 								port: parsed.port,
-								path: parsed.pathname + parsed.search + term
+								path: parsed.pathname + parsed.search + escape(term)
 							}
+							
+							console.log(options.host + options.path)
 							
 							http.request(options, function(response){
 							  var str = '';
