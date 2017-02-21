@@ -53,16 +53,17 @@ evaluator.directive('results',function(queryService) {
 		restrict: 'E',
 		transclude: true,	
 		scope: true,
-		template: '<div class="results">NUM FOUND: {{ results.response.numFound }} {{ results.responseHeader }}\
-					<div ng-repeat="doc in results.response.docs" class="result"><span class="offerId">{{ doc.id }}</span><span class="offerTitle" ng-bind-html="doc.offerTitle | unsafe"></span><action data-id="{{ doc.id }}" data-title="{{ doc.offerTitle }}"></action></div>\
+		template: '<div class="results">NUM FOUND: {{ results.response.numFound }} \
+					<div ng-repeat="doc in results.response.docs" class="result"><span class="offerId">{{ doc.skuid }} - {{ doc.final_boost }} - {{ doc.score }}</span><span class="offerTitle" ng-bind-html="doc.productname[0] | unsafe"></span><action data-id="{{ doc.skuid }}" data-title="{{ doc.productname[0] }}"></action></div>\
 					</div>',
 		link: function(scope, elem, attrs) {
 			
 			scope.toggle = function(obj,$event) {
 				$event.target.previousElementSibling.show();
 			}
+			
 			scope.$watch('term.term', function() {				
-					scope.setResults();
+					scope.setResults();					
 			});
 				
 			scope.setResults = function() {
@@ -75,7 +76,7 @@ evaluator.directive('results',function(queryService) {
 					query.then(
 							function(payload) {
 								console.log("DATA RETRIEVED FOR VERSION " + version);
-								scope.results = payload.data;
+								scope.results = payload.data;									
 							});
 			}
 			

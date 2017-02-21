@@ -16,7 +16,7 @@ results { text-align:center; display:inline-block; cursor:pointer; width:330px; 
 first { display:inline-block; }
 
 .result { position:relative;background-color:#eeeeee; margin:5px 0px; padding:10px; color:Black;}
-.result .offerId { font-size:10px; display:none; }
+.result .offerId { font-size:10px;}
 .result .offerTitle { font-size: 18px; font-weight: bold; display: block }
 
 .button { cursor:pointer; font-size:36px; line-height:36px; font-weight:bold; padding:10px; display:inline-block}
